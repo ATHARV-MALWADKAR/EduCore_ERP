@@ -2,17 +2,20 @@ import time
 from collections import defaultdict
 from typing import Callable
 
-from fastapi.responses import RedirectResponse
 from fastapi import Request, Response
+from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 
 class SecureHeadersMiddleware(BaseHTTPMiddleware):
+
     def __init__(self, app, hsts_seconds: int = 63072000):
         super().__init__(app)
         self.hsts_seconds = hsts_seconds
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+
         response = await call_next(request)
 
         response.headers["X-Frame-Options"] = "DENY"
@@ -26,6 +29,7 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
+
     def __init__(self, app, max_requests: int = 120, window_seconds: int = 60):
         super().__init__(app)
         self.max_requests = max_requests
@@ -33,6 +37,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         self._requests = defaultdict(list)
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+
         ip = request.client.host if request.client else "unknown"
         now = time.time()
 
@@ -53,17 +58,16 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
 
 class ErrorHandlerMiddleware(BaseHTTPMiddleware):
+
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
+
         try:
             return await call_next(request)
 
         except Exception:
-            from fastapi.responses import JSONResponse
-            from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
-
             return JSONResponse(
                 status_code=HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Internal server error"},
+                content={"detail": "Internal server error"}
             )
 
 
@@ -72,7 +76,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
     def __init__(self, app):
         super().__init__(app)
 
-        # Public routes that do not require authentication
+        # Public routes (no login required)
         self.public_paths = [
             "/login",
             "/health",
@@ -88,7 +92,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         path = request.url.path
 
-        # Allow static files
+        # Allow OPTIONS requests (important for browser requests)
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
+        # Allow static assets
         if path.startswith("/static"):
             return await call_next(request)
 
@@ -101,7 +109,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         if not auth_header or not auth_header.startswith("Bearer "):
 
-            # If browser request → redirect to login
+            # If HTML request → redirect to login page
             if "text/html" in request.headers.get("accept", ""):
                 return RedirectResponse(url="/login", status_code=302)
 

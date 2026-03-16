@@ -43,7 +43,7 @@ app = FastAPI(
 Base.metadata.create_all(bind=engine)
 
 # Mount static files
-app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app/templates")), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app/static")), name="static")
 
 app.add_middleware(ErrorHandlerMiddleware)
 app.add_middleware(RateLimitMiddleware, max_requests=200, window_seconds=60)

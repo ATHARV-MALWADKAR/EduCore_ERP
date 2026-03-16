@@ -1,191 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>College ERP - Login</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <link rel="stylesheet" href="/static/styles.css">
-    <script src="/static/theme.js"></script>
-    <style>
-        .login-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .glass {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        .dark .login-bg {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        }
-        .dark .glass {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>College ERP - Login</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<link rel="stylesheet" href="/static/styles.css">
+<script src="/static/theme.js"></script>
+
+<style>
+.login-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
+.glass{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}
+.dark .login-bg{background:linear-gradient(135deg,#1e293b 0%,#334155 100%)}
+.dark .glass{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1)}
+</style>
 </head>
+
 <body class="login-bg min-h-screen flex items-center justify-center p-4">
-    <div class="glass rounded-2xl p-8 w-full max-w-md shadow-2xl">
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-                <i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
-            </div>
-            <h1 class="text-3xl font-bold text-white mb-2">College ERP</h1>
-            <p class="text-white/80">Sign in to your account</p>
-        </div>
 
-        <form id="loginForm" class="space-y-6">
-            <div>
-                <label for="email" class="block text-sm font-medium text-white/90 mb-2">
-                    Email Address
-                </label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    required
-                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
-                    placeholder="Enter your email"
-                >
-            </div>
+<div class="glass rounded-2xl p-8 w-full max-w-md shadow-2xl">
 
-            <div>
-                <label for="password" class="block text-sm font-medium text-white/90 mb-2">
-                    Password
-                </label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    required
-                    class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-transparent"
-                    placeholder="Enter your password"
-                >
-            </div>
+<div class="text-center mb-8">
+<div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
+<i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
+</div>
+<h1 class="text-3xl font-bold text-white mb-2">College ERP</h1>
+<p class="text-white/80">Sign in to your account</p>
+</div>
 
-            <button
-                type="submit"
-                id="loginBtn"
-                class="w-full bg-white text-purple-600 py-3 px-4 rounded-lg font-semibold hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white/50 transition duration-200 flex items-center justify-center"
-            >
-                <span id="btnText">Sign In</span>
-                <div id="loadingSpinner" class="hidden ml-2 w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-            </button>
-        </form>
+<form id="loginForm" class="space-y-6">
 
-        <div id="errorMessage" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-100 text-sm hidden">
-            <div class="flex items-center">
-                <i data-lucide="alert-circle" class="w-4 h-4 mr-2"></i>
-                <span id="errorText"></span>
-            </div>
-        </div>
+<div>
+<label class="block text-sm font-medium text-white/90 mb-2">Email Address</label>
+<input type="email" id="email" required class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50" placeholder="Enter your email">
+</div>
 
-        <div class="mt-6 text-center">
-            <p class="text-white/60 text-sm">
-                Demo credentials: admin@college.edu / admin123
-            </p>
-        </div>
-    </div>
+<div>
+<label class="block text-sm font-medium text-white/90 mb-2">Password</label>
+<input type="password" id="password" required class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50" placeholder="Enter your password">
+</div>
 
-    <script>
-        // Theme toggle functionality
-        function initTheme() {
-            if (window.themeManager) {
-                window.themeManager.init();
-            }
-        }
+<button id="loginBtn" type="submit" class="w-full bg-white text-purple-600 py-3 rounded-lg font-semibold flex items-center justify-center">
+<span id="btnText">Sign In</span>
+<div id="loadingSpinner" class="hidden ml-2 w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+</button>
 
-        // Initialize theme on page load
-        initTheme();
+</form>
 
-        // Login form handling
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+<div id="errorMessage" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-100 text-sm hidden">
+<span id="errorText"></span>
+</div>
 
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const btnText = document.getElementById('btnText');
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            const errorMessage = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
+<div class="mt-6 text-center text-white/60 text-sm">
+Demo credentials: admin@college.edu / admin123
+</div>
 
-            // Show loading state
-            loginBtn.disabled = true;
-            btnText.textContent = 'Signing in...';
-            loadingSpinner.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
+</div>
 
-            try {
-                const response = await fetch('/api/v1/auth/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        email: email,
-                        password: password
-                    })
-                });
+<script>
 
-                const data = await response.json();
+function initTheme(){
+if(window.themeManager){window.themeManager.init();}
+}
+initTheme();
 
-                if (response.ok) {
-                    // Store token
-                    localStorage.setItem('access_token', data.access_token);
+document.getElementById("loginForm").addEventListener("submit",async function(e){
 
-                    // Get user info to determine role
-                    const userResponse = await fetch('/api/v1/auth/me', {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${data.access_token}`,
-                        }
-                    });
+e.preventDefault()
 
-                    if (userResponse.ok) {
-                        const userData = await userResponse.json();
-                        const role = userData.role;
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
 
-                        let redirectUrl = '/dashboard';
-                        if (role === 'admin') {
-                            redirectUrl = '/admin';
-                        } else if (role === 'faculty') {
-                            redirectUrl = '/faculty';
-                        } else if (role === 'student') {
-                            redirectUrl = '/student';
-                        }
+const btn=document.getElementById("loginBtn")
+const text=document.getElementById("btnText")
+const spinner=document.getElementById("loadingSpinner")
 
-                        window.location.href = redirectUrl;
-                    } else {
-                        throw new Error('Failed to get user information');
-                    }
-                } else {
-                    // Extract proper error message from API response
-                    let errorMsg = 'Login failed';
-                    if (data.detail) {
-                        errorMsg = data.detail;
-                    } else if (data.message) {
-                        errorMsg = data.message;
-                    } else if (typeof data === 'string') {
-                        errorMsg = data;
-                    }
-                    throw new Error(errorMsg);
-                }
-            } catch (error) {
-                errorText.textContent = error.message;
-                errorMessage.classList.remove('hidden');
-            } finally {
-                // Reset loading state
-                loginBtn.disabled = false;
-                btnText.textContent = 'Sign In';
-                loadingSpinner.classList.add('hidden');
-            }
-        });
+const errorBox=document.getElementById("errorMessage")
+const errorText=document.getElementById("errorText")
 
-        // Initialize Lucide icons
-        lucide.createIcons();
-    </script>
+btn.disabled=true
+text.textContent="Signing in..."
+spinner.classList.remove("hidden")
+errorBox.classList.add("hidden")
+
+try{
+
+const response=await fetch("/api/v1/auth/login/json",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({email:email,password:password})
+})
+
+const data=await response.json()
+console.log("LOGIN RESPONSE:",data)
+
+if(!response.ok){
+throw new Error(data.detail||"Invalid credentials")
+}
+
+localStorage.setItem("access_token",data.access_token)
+
+const role=data.role||"admin"
+
+if(role==="admin"){window.location.href="/admin"}
+else if(role==="faculty"){window.location.href="/faculty"}
+else if(role==="student"){window.location.href="/student"}
+else{window.location.href="/admin"}
+
+}catch(err){
+
+console.error(err)
+errorText.textContent=err.message||"Login failed"
+errorBox.classList.remove("hidden")
+
+}finally{
+
+btn.disabled=false
+text.textContent="Sign In"
+spinner.classList.add("hidden")
+
+}
+
+})
+
+lucide.createIcons()
+
+</script>
+
 </body>
 </html>
