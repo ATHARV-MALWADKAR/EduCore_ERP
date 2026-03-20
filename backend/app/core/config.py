@@ -7,11 +7,15 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     app_name: str = "College ERP"
     app_env: str = Field("development", env="APP_ENV")
-    secret_key: str = Field("CHANGE_ME_SUPER_SECRET_KEY", env="SECRET_KEY")
+    secret_key: str = Field("your-super-secret-key-change-me-in-production", env="SECRET_KEY")
 
     backend_port: int = Field(8000, env="BACKEND_PORT")
     frontend_port: int = Field(3000, env="FRONTEND_PORT")
 
+    # Database type: sqlite or mysql
+    db_type: str = Field("sqlite", env="DB_TYPE")
+    
+    # MySQL Configuration
     db_host: str = Field("localhost", env="DB_HOST")
     db_port: int = Field(3306, env="DB_PORT")
     db_user: str = Field("college_erp_user", env="DB_USER")
@@ -26,6 +30,11 @@ class Settings(BaseSettings):
     def sqlalchemy_database_uri(self) -> str:
         if self.app_env == "test":
             return "sqlite:///./test_college_erp.db"
+        
+        if self.db_type == "sqlite":
+            return "sqlite:///./college_erp.db"
+        
+        # MySQL default
         return (
             f"mysql+pymysql://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"

@@ -3,7 +3,8 @@ from datetime import date
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base
-from app.db.session import engine, get_db
+from app.db.session import engine, get_db, SessionLocal
+from app.db.init_db import seed_database
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
@@ -41,6 +42,16 @@ app = FastAPI(
 )
 
 Base.metadata.create_all(bind=engine)
+
+# Seed database on startup
+@app.on_event("startup")
+def startup_event():
+    """Initialize database with seed data on startup."""
+    db = SessionLocal()
+    try:
+        seed_database(db)
+    finally:
+        db.close()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app/static")), name="static")

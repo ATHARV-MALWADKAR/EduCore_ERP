@@ -85,7 +85,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/openapi.json",
             "/api/v1/auth/login",
             "/api/v1/auth/login/json",
-            "/api/v1/auth/register"
+            "/api/v1/auth/register",
+            "/api/v1/auth/logout"
         ]
 
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
@@ -105,10 +106,22 @@ class AuthMiddleware(BaseHTTPMiddleware):
             if path.startswith(public):
                 return await call_next(request)
 
+        # Check for auth in Authorization header
         auth_header = request.headers.get("Authorization")
+        has_auth_header = auth_header and auth_header.startswith("Bearer ")
+        
+        # Check for auth in cookie
+        access_token = request.cookies.get("access_token")
+        
+        # If token is in cookie but not in header, add it to the header
+        if access_token and not has_auth_header:
+            # Create a new scope with the Authorization header added
+            request.scope["headers"] = list(request.scope["headers"]) + [
+                (b"authorization", f"Bearer {access_token}".encode())
+            ]
+            has_auth_header = True
 
-        if not auth_header or not auth_header.startswith("Bearer "):
-
+        if not has_auth_header:
             # If HTML request → redirect to login page
             if "text/html" in request.headers.get("accept", ""):
                 return RedirectResponse(url="/login", status_code=302)

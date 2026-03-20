@@ -168,8 +168,16 @@
         // Logout functionality
         function initLogout() {
             const logoutBtn = document.getElementById('logoutBtn');
-            logoutBtn.addEventListener('click', function() {
+            logoutBtn.addEventListener('click', async function() {
+                // Call logout endpoint to clear server-side cookie
+                try {
+                    await fetch('/api/v1/auth/logout', {method: 'POST'});
+                } catch (e) {
+                    console.log('Logout endpoint call failed:', e);
+                }
+                // Clear localStorage
                 localStorage.removeItem('access_token');
+                // Redirect to login
                 window.location.href = '/login';
             });
         }

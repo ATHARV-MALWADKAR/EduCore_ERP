@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
 
@@ -47,14 +48,18 @@ def login(
         user_id=user.id,
         role_name=user.role.name,
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        role=user.role.name,
+    )
 
 
 @router.post("/auth/login/json", response_model=Token)
 def login_json(
     data: LoginRequest,
     db: Session = Depends(get_db),
-) -> Token:
+) -> JSONResponse:
     """Login with JSON body (email, password). Returns JWT access token."""
     user = get_user_by_email(db, data.email)
     if not user or not verify_password(data.password, user.hashed_password):
@@ -72,7 +77,25 @@ def login_json(
         user_id=user.id,
         role_name=user.role.name,
     )
-    return Token(access_token=access_token, token_type="bearer")
+    
+    # Create response with token
+    response_data = {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "role": user.role.name,
+    }
+    
+    # Create JSONResponse to set cookie
+    response = JSONResponse(content=response_data)
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        max_age=60 * 60,  # 1 hour
+        secure=False,  # Set to True in production with HTTPS
+        httponly=True,
+        samesite="lax",
+    )
+    return response
 
 
 @router.post("/auth/register", response_model=UserWithRole)
@@ -114,3 +137,11 @@ def register(
 def me(current_user: CurrentUser) -> UserWithRole:
     """Return current authenticated user. Requires Bearer token."""
     return _user_to_response(current_user)
+
+
+@router.post("/auth/logout")
+def logout():
+    """Logout endpoint - clears the session."""
+    response = JSONResponse({"message": "Logged out successfully"})
+    response.delete_cookie("access_token")
+    return response
