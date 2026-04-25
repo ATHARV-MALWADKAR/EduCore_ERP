@@ -1,4 +1,4 @@
-# College ERP System
+# EduCore_ERP System
 
 Modern college ERP system with a FastAPI backend, Reflex (Python) frontend, and MySQL database using SQLAlchemy ORM.
 
