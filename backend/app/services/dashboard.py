@@ -141,8 +141,7 @@ def get_faculty_dashboard_data(db: Session, faculty_id: int) -> Dict[str, Any]:
             Assignment.created_by_id == faculty.id,
             Submission.marks_given.is_(None)
         )
-    ).join(Assignment, Assignment.id == Submission.assignment_id)
-    ).scalar() or 0
+    ).join(Assignment, Assignment.id == Submission.assignment_id).scalar() or 0
 
     # New submissions (last 24 hours)
     yesterday = datetime.utcnow() - timedelta(days=1)
@@ -151,8 +150,7 @@ def get_faculty_dashboard_data(db: Session, faculty_id: int) -> Dict[str, Any]:
             Assignment.created_by_id == faculty.id,
             Submission.submitted_at >= yesterday
         )
-    ).join(Assignment, Assignment.id == Submission.assignment_id)
-    ).scalar() or 0
+    ).join(Assignment, Assignment.id == Submission.assignment_id).scalar() or 0
 
     # Today's schedule
     todays_schedule = db.query(TimetableEntry).filter(
