@@ -92,30 +92,21 @@ app.include_router(timetable_router, prefix=api_prefix, tags=["timetable"])
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    return templates.TemplateResponse(
-        "login.html",
-        {"request": request}
-    )
+    return templates.TemplateResponse(request, "login.html", {"request": request})
 
 
 # ------------------ Dashboard UI Route ------------------
 
 @app.get("/dashboard", response_class=HTMLResponse)
 async def dashboard(request: Request):
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {"request": request}
-    )
+    return templates.TemplateResponse(request, "dashboard.html", {"request": request})
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_dashboard(
     request: Request,
     current_user: RequireAdmin,
 ):
-    return templates.TemplateResponse(
-        "admin_dashboard.html",
-        {"request": request, "current_user": current_user}
-    )
+    return templates.TemplateResponse(request, "admin_dashboard.html", {"request": request, "current_user": current_user})
 
 
 @app.get("/faculty", response_class=HTMLResponse)
@@ -123,10 +114,7 @@ async def faculty_dashboard(
     request: Request,
     current_user: RequireFaculty,
 ):
-    return templates.TemplateResponse(
-        "faculty_dashboard.html",
-        {"request": request, "current_user": current_user}
-    )
+    return templates.TemplateResponse(request, "faculty_dashboard.html", {"request": request, "current_user": current_user})
 
 
 @app.get("/student", response_class=HTMLResponse)
@@ -134,10 +122,7 @@ async def student_dashboard(
     request: Request,
     current_user: RequireStudent,
 ):
-    return templates.TemplateResponse(
-        "student_dashboard.html",
-        {"request": request, "current_user": current_user}
-    )
+    return templates.TemplateResponse(request, "student_dashboard.html", {"request": request, "current_user": current_user})
 
     
 
@@ -148,9 +133,7 @@ async def students_page(
     db: Session = Depends(get_db),
 ):
     students = student_crud.list_students(db)
-    return templates.TemplateResponse(
-        "students.html",
-        {
+    return templates.TemplateResponse(request, "students.html", {
             "request": request,
             "students": students,
         },
@@ -277,34 +260,34 @@ async def faculty_page(request: Request):
 
 @app.get("/assignments", response_class=HTMLResponse)
 async def assignments_page(request: Request):
-    return templates.TemplateResponse("assignments.html", {"request": request})
+    return templates.TemplateResponse(request, "assignments.html", {"request": request})
 
 
 @app.get("/results", response_class=HTMLResponse)
 async def results_page(request: Request):
-    return templates.TemplateResponse("results.html", {"request": request})
+    return templates.TemplateResponse(request, "results.html", {"request": request})
 
 
 @app.get("/notices", response_class=HTMLResponse)
 async def notices_page(request: Request):
-    return templates.TemplateResponse("notices.html", {"request": request})
+    return templates.TemplateResponse(request, "notices.html", {"request": request})
 
 
 @app.get("/timetable", response_class=HTMLResponse)
 async def timetable_page(request: Request):
-    return templates.TemplateResponse("timetable.html", {"request": request})
+    return templates.TemplateResponse(request, "timetable.html", {"request": request})
 
 
 @app.get("/assignments", response_class=HTMLResponse)
 async def assignments_page(request: Request):
-    return templates.TemplateResponse("assignments.html", {"request": request})
+    return templates.TemplateResponse(request, "assignments.html", {"request": request})
 
 
 @app.get("/assignments/{assignment_id}", response_class=HTMLResponse)
 async def assignment_details_page(request: Request, assignment_id: int):
-    return templates.TemplateResponse("assignment_details.html", {"request": request, "assignment_id": assignment_id})
+    return templates.TemplateResponse(request, "assignment_details.html", {"request": request, "assignment_id": assignment_id})
 
 
 @app.get("/submissions/{submission_id}", response_class=HTMLResponse)
 async def submission_page(request: Request, submission_id: int):
-    return templates.TemplateResponse("submission.html", {"request": request, "submission_id": submission_id})
+    return templates.TemplateResponse(request, "submission.html", {"request": request, "submission_id": submission_id})
