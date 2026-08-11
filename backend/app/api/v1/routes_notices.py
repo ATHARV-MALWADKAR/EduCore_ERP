@@ -51,7 +51,9 @@ def create_new_notice(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only admins and faculty can create notices",
         )
-    return create_notice(db, notice)
+    payload = notice.model_dump(exclude={"created_by_id"})
+    payload["created_by_id"] = current_user.id
+    return create_notice(db, NoticeCreate(**payload))
 
 
 @router.get("/notices/{notice_id}", response_model=NoticeRead)
@@ -64,6 +66,10 @@ def get_notice_details(
     notice = get_notice(db, notice_id)
     if not notice:
         raise HTTPException(status_code=404, detail="Notice not found")
+    if current_user.role.name != "admin":
+        visible_ids = {item.id for item in get_notices_by_user(db, current_user.id, 0, 1000)}
+        if notice.id not in visible_ids:
+            raise HTTPException(status_code=403, detail="Not authorized to view this notice")
     return notice
 
 

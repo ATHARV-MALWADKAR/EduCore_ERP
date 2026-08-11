@@ -69,6 +69,10 @@ def create_timetable(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized",
         )
+    if current_user.role.name == "faculty":
+        if not current_user.faculty_profile:
+            raise HTTPException(status_code=409, detail="Faculty profile not found")
+        entry = entry.model_copy(update={"faculty_id": current_user.faculty_profile.id})
     return create_timetable_entry(db, entry)
 
 
@@ -97,6 +101,13 @@ def update_timetable_entry_route(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized",
         )
+    existing = get_timetable_entry(db, entry_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Timetable entry not found")
+    if current_user.role.name == "faculty":
+        if not current_user.faculty_profile or existing.faculty_id != current_user.faculty_profile.id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        entry_update = entry_update.model_copy(update={"faculty_id": current_user.faculty_profile.id})
     updated = update_timetable_entry(db, entry_id, entry_update)
     if not updated:
         raise HTTPException(status_code=404, detail="Timetable entry not found")

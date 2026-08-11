@@ -13,6 +13,7 @@ class SubmissionBase(BaseModel):
 
 class SubmissionCreate(BaseModel):
     assignment_id: int
+    student_id: int
     content: str | None = None
 
 

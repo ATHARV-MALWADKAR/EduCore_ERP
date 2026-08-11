@@ -11,7 +11,7 @@ class TimetableEntryBase(BaseModel):
     start_time: time
     end_time: time
     room: str | None = None
-    academic_year: str | None = None
+    academic_year: str
 
 
 class TimetableEntryCreate(TimetableEntryBase):

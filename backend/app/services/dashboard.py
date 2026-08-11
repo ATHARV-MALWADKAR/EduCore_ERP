@@ -41,10 +41,10 @@ def get_student_dashboard_data(db: Session, student_id: int) -> Dict[str, Any]:
     week_from_now = datetime.utcnow() + timedelta(days=7)
     assignments_due = db.query(Assignment).filter(
         and_(
-            Assignment.due_date <= week_from_now.date(),
-            Assignment.due_date >= datetime.utcnow().date()
+            Assignment.due_at <= week_from_now,
+            Assignment.due_at >= datetime.utcnow()
         )
-    ).join(Enrollment, Enrollment.course_id == Assignment.course_id).filter(
+    ).join(Subject, Subject.id == Assignment.subject_id).join(Enrollment, Enrollment.course_id == Subject.course_id).filter(
         Enrollment.student_id == student.id
     ).count()
 
@@ -82,8 +82,8 @@ def get_student_dashboard_data(db: Session, student_id: int) -> Dict[str, Any]:
 
     # Pending assignments
     pending_assignments = db.query(Assignment).filter(
-        Assignment.due_date >= datetime.utcnow().date()
-    ).join(Enrollment, Enrollment.course_id == Assignment.course_id).filter(
+        Assignment.due_at >= datetime.utcnow()
+    ).join(Subject, Subject.id == Assignment.subject_id).join(Enrollment, Enrollment.course_id == Subject.course_id).filter(
         Enrollment.student_id == student.id
     ).outerjoin(Submission, and_(
         Submission.assignment_id == Assignment.id,
@@ -95,7 +95,7 @@ def get_student_dashboard_data(db: Session, student_id: int) -> Dict[str, Any]:
         pending_assignments_data.append({
             "title": assignment.title,
             "subject_name": assignment.subject.name,
-            "due_date": assignment.due_date.strftime("%b %d, %Y")
+            "due_date": assignment.due_at.strftime("%b %d, %Y")
         })
 
     # Recent notices (last 5)
@@ -138,18 +138,20 @@ def get_faculty_dashboard_data(db: Session, faculty_id: int) -> Dict[str, Any]:
     # Pending evaluations (submissions without marks)
     pending_evaluations = db.query(func.count(Submission.id)).filter(
         and_(
-            Submission.faculty_id == faculty.id,
+            Assignment.created_by_id == faculty.id,
             Submission.marks_given.is_(None)
         )
+    ).join(Assignment, Assignment.id == Submission.assignment_id)
     ).scalar() or 0
 
     # New submissions (last 24 hours)
     yesterday = datetime.utcnow() - timedelta(days=1)
     new_submissions = db.query(func.count(Submission.id)).filter(
         and_(
-            Submission.faculty_id == faculty.id,
+            Assignment.created_by_id == faculty.id,
             Submission.submitted_at >= yesterday
         )
+    ).join(Assignment, Assignment.id == Submission.assignment_id)
     ).scalar() or 0
 
     # Today's schedule
@@ -170,9 +172,9 @@ def get_faculty_dashboard_data(db: Session, faculty_id: int) -> Dict[str, Any]:
         })
 
     # Recent submissions (last 5)
-    recent_submissions = db.query(Submission).filter(
-        Submission.faculty_id == faculty.id
-    ).join(Assignment, Assignment.id == Submission.assignment_id).join(
+    recent_submissions = db.query(Submission).join(Assignment, Assignment.id == Submission.assignment_id).filter(
+        Assignment.created_by_id == faculty.id
+    ).join(
         Student, Student.id == Submission.student_id
     ).join(User, User.id == Student.user_id).order_by(
         Submission.submitted_at.desc()

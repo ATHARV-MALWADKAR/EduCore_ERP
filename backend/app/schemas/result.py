@@ -21,3 +21,9 @@ class ResultRead(ResultBase):
     class Config:
         from_attributes = True
 
+
+class ResultUpdate(BaseModel):
+    marks_obtained: float | None = None
+    max_marks: float | None = None
+    grade: str | None = None
+
