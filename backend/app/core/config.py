@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -25,6 +25,21 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = Field(
         60, env="ACCESS_TOKEN_EXPIRE_MINUTES"
     )
+    cors_origins: str = Field("http://localhost:8000", env="CORS_ORIGINS")
+    cookie_secure: bool = Field(False, env="COOKIE_SECURE")
+    max_upload_size_mb: int = Field(10, env="MAX_UPLOAD_SIZE_MB")
+
+    @field_validator("db_type")
+    @classmethod
+    def validate_database_type(cls, value: str) -> str:
+        value = value.lower().strip()
+        if value not in {"sqlite", "mysql"}:
+            raise ValueError("DB_TYPE must be either sqlite or mysql")
+        return value
+
+    @property
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
 
     @property
     def sqlalchemy_database_uri(self) -> str:

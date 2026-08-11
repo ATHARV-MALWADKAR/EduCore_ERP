@@ -6,6 +6,7 @@ from fastapi import Request, Response
 from fastapi.responses import RedirectResponse, JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
+from app.core.config import settings
 
 
 class SecureHeadersMiddleware(BaseHTTPMiddleware):
@@ -22,7 +23,8 @@ class SecureHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
-        response.headers["Strict-Transport-Security"] = f"max-age={self.hsts_seconds}; includeSubDomains"
+        if settings.app_env == "production" and request.url.scheme == "https":
+            response.headers["Strict-Transport-Security"] = f"max-age={self.hsts_seconds}; includeSubDomains"
         response.headers["X-XSS-Protection"] = "1; mode=block"
 
         return response
@@ -85,7 +87,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/openapi.json",
             "/api/v1/auth/login",
             "/api/v1/auth/login/json",
-            "/api/v1/auth/register",
             "/api/v1/auth/logout"
         ]
 
@@ -102,9 +103,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         # Allow public routes
-        for public in self.public_paths:
-            if path.startswith(public):
-                return await call_next(request)
+        if path in self.public_paths:
+            return await call_next(request)
 
         # Check for auth in Authorization header
         auth_header = request.headers.get("Authorization")

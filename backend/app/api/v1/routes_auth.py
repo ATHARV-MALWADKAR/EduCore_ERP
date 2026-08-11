@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.deps import CurrentUser
 from app.core.security import create_access_token, verify_password
 from app.crud.user import create_user, get_user_by_email, get_role_by_name
@@ -91,7 +92,7 @@ def login_json(
         key="access_token",
         value=access_token,
         max_age=60 * 60,  # 1 hour
-        secure=False,  # Set to True in production with HTTPS
+        secure=settings.cookie_secure,
         httponly=True,
         samesite="lax",
     )
@@ -101,11 +102,14 @@ def login_json(
 @router.post("/auth/register", response_model=UserWithRole)
 def register(
     data: RegisterRequest,
+    current_user: CurrentUser,
     db: Session = Depends(get_db),
 ) -> UserWithRole:
     """
-    Register a new user with role: student, faculty, or admin.
+    Register a new user. Only administrators can provision accounts.
     """
+    if current_user.role.name != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Administrator access required")
     if get_user_by_email(db, data.email):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

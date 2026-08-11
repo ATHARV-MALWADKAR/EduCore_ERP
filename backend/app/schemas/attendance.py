@@ -2,11 +2,18 @@ from datetime import date
 
 from pydantic import BaseModel
 
-from app.db.models.attendance import AttendanceStatus
+from enum import Enum
+
+
+class AttendanceStatus(str, Enum):
+    PRESENT = "present"
+    ABSENT = "absent"
+    LATE = "late"
 
 
 class AttendanceBase(BaseModel):
     student_id: int
+    subject_id: int
     date: date
     status: AttendanceStatus
 

@@ -6,6 +6,12 @@ from sqlalchemy.orm import relationship
 from app.db.base import Base
 
 
+class AttendanceStatus:
+    PRESENT = "present"
+    ABSENT = "absent"
+    LATE = "late"
+
+
 class Attendance(Base):
     __tablename__ = "attendance"
 

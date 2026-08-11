@@ -1,10 +1,11 @@
-import os
-import shutil
+from pathlib import Path
+from uuid import uuid4
 from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.deps import CurrentUser, RequireFaculty, RequireStudent
 from app.crud.assignment import (
     create_assignment,
@@ -25,8 +26,8 @@ from app.schemas.submission import SubmissionCreate, SubmissionRead, SubmissionU
 
 router = APIRouter()
 
-UPLOAD_DIR = "uploads/assignments"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+UPLOAD_DIR = Path("uploads") / "assignments"
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.get("/assignments", response_model=List[AssignmentRead])
@@ -52,7 +53,11 @@ def create_new_assignment(
     db: Session = Depends(get_db),
 ) -> AssignmentRead:
     """Create a new assignment (faculty only)."""
-    return create_assignment(db, assignment)
+    if not current_user.faculty_profile:
+        raise HTTPException(status_code=409, detail="Faculty profile is required before creating assignments")
+    payload = assignment.model_dump(exclude={"created_by_id"})
+    payload["created_by_id"] = current_user.faculty_profile.id
+    return create_assignment(db, AssignmentCreate(**payload))
 
 
 @router.get("/assignments/{assignment_id}", response_model=AssignmentRead)
@@ -108,11 +113,26 @@ def submit_assignment(
     
     file_path = None
     if file:
-        file_path = f"{UPLOAD_DIR}/{assignment_id}_{current_user.student_profile.id}_{file.filename}"
-        with open(file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    
-    submission = SubmissionCreate(assignment_id=assignment_id, content=content)
+        suffix = Path(file.filename or "submission").suffix.lower()
+        if suffix not in {".pdf", ".doc", ".docx", ".txt", ".zip"}:
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+        target = UPLOAD_DIR / f"{assignment_id}_{current_user.student_profile.id}_{uuid4().hex}{suffix}"
+        size = 0
+        with target.open("wb") as buffer:
+            while chunk := file.file.read(1024 * 1024):
+                size += len(chunk)
+                if size > settings.max_upload_size_mb * 1024 * 1024:
+                    buffer.close()
+                    target.unlink(missing_ok=True)
+                    raise HTTPException(status_code=413, detail="Uploaded file is too large")
+                buffer.write(chunk)
+        file_path = str(target)
+
+    submission = SubmissionCreate(
+        assignment_id=assignment_id,
+        student_id=current_user.student_profile.id,
+        content=content,
+    )
     return create_submission(db, submission, file_path)
 
 
@@ -137,7 +157,9 @@ def grade_submission(
     db: Session = Depends(get_db),
 ) -> SubmissionRead:
     """Grade a submission (faculty only)."""
-    # Note: In a real app, you'd check if the faculty teaches the subject
+    submission = get_submission(db, submission_id)
+    if not submission or submission.assignment.created_by_id != current_user.faculty_profile.id:
+        raise HTTPException(status_code=404, detail="Submission not found or not authorized")
     updated = update_submission(db, submission_id, submission_update)
     if not updated:
         raise HTTPException(status_code=404, detail="Submission not found")

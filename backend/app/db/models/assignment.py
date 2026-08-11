@@ -38,28 +38,3 @@ class Assignment(Base):
     subject = relationship("Subject", back_populates="assignments")
     created_by = relationship("Faculty", back_populates="assignments")
     submissions = relationship("Submission", back_populates="assignment")
-    __tablename__ = "assignments"
-
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    subject_id = Column(
-        Integer,
-        ForeignKey("subjects.id", ondelete="RESTRICT", onupdate="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    created_by_id = Column(
-        Integer,
-        ForeignKey("faculty.id", ondelete="RESTRICT", onupdate="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
-    due_at = Column(DateTime, nullable=False)
-    status = Column(String(20), nullable=False, default="draft", index=True)  # draft, published, closed
-    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    subject = relationship("Subject", back_populates="assignments")
-    created_by = relationship("Faculty", back_populates="assignments")
-    submissions = relationship("Submission", back_populates="assignment")

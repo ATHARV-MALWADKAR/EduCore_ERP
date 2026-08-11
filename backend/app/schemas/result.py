@@ -3,7 +3,9 @@ from pydantic import BaseModel
 
 class ResultBase(BaseModel):
     student_id: int
-    course_code: str
+    subject_id: int
+    exam_type: str
+    academic_year: str
     marks_obtained: float
     max_marks: float
     grade: str | None = None
