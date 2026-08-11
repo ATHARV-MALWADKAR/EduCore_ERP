@@ -4,92 +4,174 @@
 {% block page_title %}Faculty Dashboard{% endblock %}
 
 {% block sidebar_links %}
-<a href="/faculty" class="flex items-center px-4 py-3 text-white bg-gray-700 rounded-lg">
+<a href="/faculty" class="flex items-center px-4 py-3 text-white bg-white/10 rounded-xl mb-2 transition">
     <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
-    Dashboard
+    <span class="font-medium">Dashboard</span>
 </a>
-<a href="/assignments" class="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg">
+<a href="/assignments" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl mb-2 transition">
     <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
-    Assignments
+    <span class="font-medium">Assignments</span>
 </a>
-<a href="/notices" class="flex items-center px-4 py-3 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg">
+<a href="/notices" class="flex items-center px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-xl transition">
     <i data-lucide="bell" class="w-5 h-5 mr-3"></i>
-    Notices
+    <span class="font-medium">Notices</span>
 </a>
 {% endblock %}
 
 {% block content %}
-<div class="space-y-6">
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-    <div class="card rounded-xl p-6 shadow-lg">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Classes</p>
-          <p class="text-3xl font-bold text-slate-900 dark:text-white">0</p>
-        </div>
-        <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
-          <i data-lucide="book" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="card rounded-xl p-6 shadow-lg">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Students</p>
-          <p class="text-3xl font-bold text-slate-900 dark:text-white">0</p>
-        </div>
-        <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
-          <i data-lucide="users" class="w-6 h-6 text-green-600 dark:text-green-400"></i>
-        </div>
-      </div>
-    </div>
-
-    <div class="card rounded-xl p-6 shadow-lg">
-      <div class="flex items-center justify-between">
-        <div>
-          <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Pending Submissions</p>
-          <p class="text-3xl font-bold text-slate-900 dark:text-white">0</p>
-        </div>
-        <div class="p-3 bg-orange-100 dark:bg-orange-900 rounded-full">
-          <i data-lucide="file-text" class="w-6 h-6 text-orange-600 dark:text-orange-400"></i>
-        </div>
-      </div>
-    </div>
-  </div>
-
+<div class="space-y-8 animate-fade-in">
+  
   <!-- Welcome Card -->
-  <div class="card rounded-xl p-8 shadow-lg bg-gradient-to-r from-green-500 to-green-600 dark:from-green-700 dark:to-green-800">
-    <div class="text-white">
-      <h2 class="text-2xl font-bold mb-2">Welcome, Faculty!</h2>
-      <p class="text-green-100">Manage your courses, assignments, and student submissions from here.</p>
+  <div class="card p-8 bg-gradient-success border-0">
+    <div class="text-white relative z-10">
+      <h2 class="text-3xl font-bold mb-3 tracking-tight">Welcome, Professor</h2>
+      <p class="text-emerald-100 text-lg max-w-2xl">Manage your courses, assignments, and evaluate student submissions efficiently.</p>
+    </div>
+    <div class="absolute right-0 top-0 h-full w-1/3 bg-white/10 blur-3xl transform -skew-x-12 pointer-events-none"></div>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div class="card p-6 border-t-4 border-t-blue-500 group">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Today's Classes</p>
+        <div class="p-3 bg-blue-100 dark:bg-blue-900/50 rounded-xl group-hover:scale-110 transition-transform">
+          <i data-lucide="calendar" class="w-6 h-6 text-blue-600 dark:text-blue-400"></i>
+        </div>
+      </div>
+      <p class="text-4xl font-bold text-slate-900 dark:text-white" id="stat-classes">
+        <span class="inline-block w-12 h-10 loading-skeleton rounded"></span>
+      </p>
+    </div>
+
+    <div class="card p-6 border-t-4 border-t-amber-500 group">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pending Evaluations</p>
+        <div class="p-3 bg-amber-100 dark:bg-amber-900/50 rounded-xl group-hover:scale-110 transition-transform">
+          <i data-lucide="edit-3" class="w-6 h-6 text-amber-600 dark:text-amber-400"></i>
+        </div>
+      </div>
+      <p class="text-4xl font-bold text-slate-900 dark:text-white" id="stat-evaluations">
+        <span class="inline-block w-12 h-10 loading-skeleton rounded"></span>
+      </p>
+    </div>
+
+    <div class="card p-6 border-t-4 border-t-emerald-500 group">
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">New Submissions (24h)</p>
+        <div class="p-3 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl group-hover:scale-110 transition-transform">
+          <i data-lucide="inbox" class="w-6 h-6 text-emerald-600 dark:text-emerald-400"></i>
+        </div>
+      </div>
+      <p class="text-4xl font-bold text-slate-900 dark:text-white" id="stat-new">
+        <span class="inline-block w-12 h-10 loading-skeleton rounded"></span>
+      </p>
     </div>
   </div>
 
-  <!-- Quick Actions -->
-  <div class="card rounded-xl p-6 shadow-lg">
-    <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <a href="/assignments" class="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/40 transition">
-        <i data-lucide="file-text" class="w-6 h-6 text-blue-600 dark:text-blue-400 mb-2"></i>
-        <p class="font-semibold text-slate-900 dark:text-white">Create Assignment</p>
-      </a>
-      <a href="#" class="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/40 transition">
-        <i data-lucide="users" class="w-6 h-6 text-green-600 dark:text-green-400 mb-2"></i>
-        <p class="font-semibold text-slate-900 dark:text-white">View My Classes</p>
-      </a>
-      <a href="/notices" class="p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg hover:bg-orange-100 dark:hover:bg-orange-900/40 transition">
-        <i data-lucide="bell" class="w-6 h-6 text-orange-600 dark:text-orange-400 mb-2"></i>
-        <p class="font-semibold text-slate-900 dark:text-white">Notifications</p>
-      </a>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Today's Schedule -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Today's Schedule</h3>
+        <i data-lucide="clock" class="w-5 h-5 text-slate-400"></i>
+      </div>
+      <div id="schedule-container" class="space-y-4">
+        <div class="p-4 rounded-xl loading-skeleton h-20"></div>
+        <div class="p-4 rounded-xl loading-skeleton h-20"></div>
+      </div>
+    </div>
+
+    <!-- Recent Submissions -->
+    <div class="card p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white">Recent Submissions</h3>
+        <i data-lucide="file-check-2" class="w-5 h-5 text-slate-400"></i>
+      </div>
+      <div id="submissions-container" class="space-y-4">
+        <div class="p-4 rounded-xl loading-skeleton h-20"></div>
+        <div class="p-4 rounded-xl loading-skeleton h-20"></div>
+      </div>
     </div>
   </div>
+
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-  lucide.createIcons();
-});
+  async function loadFacultyStats() {
+    try {
+      const response = await fetch('/api/v1/faculty/dashboard');
+      if (!response.ok) throw new Error('Failed to fetch data');
+      
+      const data = await response.json();
+
+      document.getElementById('stat-classes').innerHTML = data.todays_classes || 0;
+      document.getElementById('stat-evaluations').innerHTML = data.pending_evaluations || 0;
+      document.getElementById('stat-new').innerHTML = data.new_submissions || 0;
+
+      // Render Schedule
+      const scheduleContainer = document.getElementById('schedule-container');
+      if (data.todays_schedule && data.todays_schedule.length > 0) {
+        scheduleContainer.innerHTML = data.todays_schedule.map(s => `
+          <div class="flex items-center p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl hover:shadow-md transition">
+            <div class="h-12 w-1 bg-blue-500 rounded-full mr-4"></div>
+            <div class="flex-1">
+              <h4 class="font-bold text-slate-900 dark:text-white">${s.subject_name}</h4>
+              <p class="text-sm text-slate-500 flex items-center mt-1">
+                <i data-lucide="clock" class="w-3 h-3 mr-1"></i> ${s.start_time} - ${s.end_time}
+                <span class="mx-2">•</span>
+                <i data-lucide="map-pin" class="w-3 h-3 mr-1"></i> Room ${s.room}
+              </p>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        scheduleContainer.innerHTML = `
+          <div class="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+            <p class="text-slate-500 dark:text-slate-400 font-medium">No classes scheduled for today.</p>
+          </div>
+        `;
+      }
+
+      // Render Submissions
+      const submissionsContainer = document.getElementById('submissions-container');
+      if (data.recent_submissions && data.recent_submissions.length > 0) {
+        submissionsContainer.innerHTML = data.recent_submissions.map(s => `
+          <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-700/50 rounded-xl hover:shadow-md transition">
+            <div>
+              <h4 class="font-bold text-slate-900 dark:text-white">${s.assignment_title}</h4>
+              <p class="text-sm text-slate-500 mt-1">By: <span class="font-medium text-slate-700 dark:text-slate-300">${s.student_name}</span></p>
+            </div>
+            <div class="text-right">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                Submitted
+              </span>
+              <p class="text-xs text-slate-400 mt-2">${s.submitted_at}</p>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        submissionsContainer.innerHTML = `
+          <div class="p-8 text-center border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl">
+            <p class="text-slate-500 dark:text-slate-400 font-medium">No recent submissions.</p>
+          </div>
+        `;
+      }
+      
+      lucide.createIcons();
+
+    } catch (error) {
+      console.error('Failed to load faculty stats:', error);
+      document.getElementById('stat-classes').innerHTML = '—';
+      document.getElementById('stat-evaluations').innerHTML = '—';
+      document.getElementById('stat-new').innerHTML = '—';
+      document.getElementById('schedule-container').innerHTML = '<p class="text-red-500">Error loading data.</p>';
+      document.getElementById('submissions-container').innerHTML = '<p class="text-red-500">Error loading data.</p>';
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", loadFacultyStats);
 </script>
 {% endblock %}

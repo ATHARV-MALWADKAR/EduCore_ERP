@@ -1,132 +1,225 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>College ERP - Login</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-<link rel="stylesheet" href="/static/styles.css">
-<script src="/static/theme.js"></script>
-
-<style>
-.login-bg{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%)}
-.glass{background:rgba(255,255,255,.1);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2)}
-.dark .login-bg{background:linear-gradient(135deg,#1e293b 0%,#334155 100%)}
-.dark .glass{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.1)}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College ERP - Sign In</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: { primary: '#4f46e5' }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/styles.css">
+    <script src="/static/theme.js"></script>
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+        .dark body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        .login-glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark .login-glass {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        .bg-shape-1 {
+            position: absolute;
+            top: -10%; left: -10%; width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(79,70,229,0.15) 0%, rgba(79,70,229,0) 70%);
+            z-index: 0; pointer-events: none;
+        }
+        .bg-shape-2 {
+            position: absolute;
+            bottom: -10%; right: -10%; width: 40vw; height: 40vw;
+            background: radial-gradient(circle, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0) 70%);
+            z-index: 0; pointer-events: none;
+        }
+    </style>
 </head>
 
-<body class="login-bg min-h-screen flex items-center justify-center p-4">
+<body class="flex items-center justify-center p-4 relative overflow-hidden transition-colors duration-300">
 
-<div class="glass rounded-2xl p-8 w-full max-w-md shadow-2xl">
+    <!-- Abstract Background Shapes -->
+    <div class="bg-shape-1"></div>
+    <div class="bg-shape-2"></div>
 
-<div class="text-center mb-8">
-<div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
-<i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
-</div>
-<h1 class="text-3xl font-bold text-white mb-2">College ERP</h1>
-<p class="text-white/80">Sign in to your account</p>
-</div>
+    <!-- Theme Toggle -->
+    <div class="absolute top-6 right-6 z-20">
+        <button id="themeToggle" class="p-3 rounded-full bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-white/40 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 shadow-sm hover:shadow-md hover:scale-110 transition-all">
+            <i data-lucide="sun" class="w-5 h-5 dark:hidden"></i>
+            <i data-lucide="moon" class="w-5 h-5 hidden dark:block"></i>
+        </button>
+    </div>
 
-<form id="loginForm" class="space-y-6">
+    <!-- Login Container -->
+    <div class="login-glass rounded-3xl p-8 sm:p-12 w-full max-w-md relative z-10 animate-fade-in">
+        
+        <div class="text-center mb-10">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-premium rounded-2xl shadow-lg shadow-indigo-500/30 mb-6 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
+                <i data-lucide="graduation-cap" class="w-10 h-10 text-white"></i>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">College ERP</h1>
+            <p class="text-slate-500 dark:text-slate-400 mt-2 font-medium">Sign in to your account</p>
+        </div>
 
-<div>
-<label class="block text-sm font-medium text-white/90 mb-2">Email Address</label>
-<input type="email" id="email" required class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50" placeholder="Enter your email">
-</div>
+        <form id="loginForm" class="space-y-6">
+            
+            <div class="space-y-1">
+                <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Email Address</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="mail" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="email" id="email" required 
+                        class="form-input pl-11 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm shadow-inner" 
+                        placeholder="you@college.edu" autocomplete="email">
+                </div>
+            </div>
 
-<div>
-<label class="block text-sm font-medium text-white/90 mb-2">Password</label>
-<input type="password" id="password" required class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50" placeholder="Enter your password">
-</div>
+            <div class="space-y-1">
+                <div class="flex items-center justify-between ml-1">
+                    <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
+                </div>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="lock" class="w-5 h-5 text-slate-400"></i>
+                    </div>
+                    <input type="password" id="password" required 
+                        class="form-input pl-11 bg-white/80 dark:bg-slate-900/50 backdrop-blur-sm shadow-inner" 
+                        placeholder="••••••••" autocomplete="current-password">
+                </div>
+            </div>
 
-<button id="loginBtn" type="submit" class="w-full bg-white text-purple-600 py-3 rounded-lg font-semibold flex items-center justify-center">
-<span id="btnText">Sign In</span>
-<div id="loadingSpinner" class="hidden ml-2 w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-</button>
+            <button id="loginBtn" type="submit" class="w-full btn-primary py-3.5 text-base shadow-lg shadow-indigo-500/30 mt-8 relative overflow-hidden group">
+                <div class="absolute inset-0 w-full h-full bg-white/20 scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 ease-out"></div>
+                <span id="btnText" class="relative z-10 flex items-center justify-center">Sign In <i data-lucide="arrow-right" class="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"></i></span>
+                <div id="loadingSpinner" class="hidden relative z-10 ml-2 w-5 h-5 border-2 border-white/50 border-t-white rounded-full animate-spin"></div>
+            </button>
 
-</form>
+        </form>
 
-<div id="errorMessage" class="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-100 text-sm hidden">
-<span id="errorText"></span>
-</div>
+        <div id="errorMessage" class="mt-6 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800/50 rounded-xl text-rose-600 dark:text-rose-400 text-sm hidden flex items-start animate-fade-in">
+            <i data-lucide="alert-circle" class="w-5 h-5 mr-2 flex-shrink-0 mt-0.5"></i>
+            <span id="errorText" class="font-medium leading-relaxed"></span>
+        </div>
 
-<div class="mt-6 text-center text-white/60 text-sm">
-Demo credentials: admin@college.edu / admin123
-</div>
+        <div class="mt-8 text-center border-t border-slate-200 dark:border-slate-700/50 pt-6">
+            <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Demo credentials:</p>
+            <div class="inline-flex items-center gap-4 mt-3">
+                <span class="px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg text-xs font-bold border border-indigo-100 dark:border-indigo-800/50">admin@college.edu</span>
+                <span class="text-slate-400">•</span>
+                <span class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-700">admin123</span>
+            </div>
+        </div>
 
-</div>
+    </div>
 
-<script>
+    <script>
+        // Theme init
+        function initTheme() {
+            if (window.themeManager) { window.themeManager.init(); }
+        }
+        initTheme();
 
-function initTheme(){
-if(window.themeManager){window.themeManager.init();}
-}
-initTheme();
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            if (window.themeManager) { window.themeManager.toggleTheme(); }
+            updateThemeIcon();
+        });
 
-document.getElementById("loginForm").addEventListener("submit",async function(e){
+        function updateThemeIcon() {
+            if (window.themeManager) {
+                const theme = window.themeManager.getSavedTheme();
+                const sunIcon = document.querySelector('[data-lucide="sun"]');
+                const moonIcon = document.querySelector('[data-lucide="moon"]');
+                if (sunIcon && moonIcon) {
+                    sunIcon.classList.toggle('hidden', theme === 'dark');
+                    moonIcon.classList.toggle('hidden', theme === 'light');
+                }
+            }
+        }
+        if (window.themeManager) { window.themeManager.onThemeChange(updateThemeIcon); }
+        updateThemeIcon();
 
-e.preventDefault()
+        // Form submission
+        document.getElementById("loginForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
 
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const btn = document.getElementById("loginBtn");
+            const text = document.getElementById("btnText");
+            const spinner = document.getElementById("loadingSpinner");
+            const errorBox = document.getElementById("errorMessage");
+            const errorText = document.getElementById("errorText");
 
-const btn=document.getElementById("loginBtn")
-const text=document.getElementById("btnText")
-const spinner=document.getElementById("loadingSpinner")
+            btn.disabled = true;
+            text.style.display = "none";
+            spinner.classList.remove("hidden");
+            errorBox.classList.add("hidden");
 
-const errorBox=document.getElementById("errorMessage")
-const errorText=document.getElementById("errorText")
+            try {
+                const response = await fetch("/api/v1/auth/login/json", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email: email, password: password })
+                });
 
-btn.disabled=true
-text.textContent="Signing in..."
-spinner.classList.remove("hidden")
-errorBox.classList.add("hidden")
+                const data = await response.json();
 
-try{
+                if (!response.ok) {
+                    throw new Error(data.detail || "Invalid credentials");
+                }
 
-const response=await fetch("/api/v1/auth/login/json",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({email:email,password:password})
-})
+                localStorage.setItem("access_token", data.access_token);
+                const role = data.role || "admin";
 
-const data=await response.json()
-console.log("LOGIN RESPONSE:",data)
+                // Add success state before redirecting
+                btn.classList.add("bg-green-500");
+                spinner.classList.add("border-t-green-200");
+                
+                setTimeout(() => {
+                    if (role === "admin") { window.location.href = "/admin"; }
+                    else if (role === "faculty") { window.location.href = "/faculty"; }
+                    else if (role === "student") { window.location.href = "/student"; }
+                    else { window.location.href = "/admin"; }
+                }, 300);
 
-if(!response.ok){
-throw new Error(data.detail||"Invalid credentials")
-}
+            } catch (err) {
+                errorText.textContent = err.message || "Login failed";
+                errorBox.classList.remove("hidden");
+                btn.disabled = false;
+                text.style.display = "flex";
+                spinner.classList.add("hidden");
+            }
+        });
 
-localStorage.setItem("access_token",data.access_token)
-
-const role=data.role||"admin"
-
-if(role==="admin"){window.location.href="/admin"}
-else if(role==="faculty"){window.location.href="/faculty"}
-else if(role==="student"){window.location.href="/student"}
-else{window.location.href="/admin"}
-
-}catch(err){
-
-console.error(err)
-errorText.textContent=err.message||"Login failed"
-errorBox.classList.remove("hidden")
-
-}finally{
-
-btn.disabled=false
-text.textContent="Sign In"
-spinner.classList.add("hidden")
-
-}
-
-})
-
-lucide.createIcons()
-
-</script>
-
+        lucide.createIcons();
+    </script>
 </body>
 </html>
