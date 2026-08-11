@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 
-from sqlalchemy import func, literal_column
+from sqlalchemy import case, func, literal_column
 from sqlalchemy.orm import Session
 
 from app.db.models.attendance import Attendance
@@ -22,7 +22,7 @@ def get_admin_dashboard_stats(db: Session) -> dict:
     # Attendance rate (last 30 days)
     attendance_query = db.query(
         func.count(Attendance.id).label("total"),
-        func.sum(func.case((Attendance.status == "present", 1), else_=0)).label("present"),
+        func.sum(case((Attendance.status == "present", 1), else_=0)).label("present"),
     )
     attendance_totals = attendance_query.one()
     attendance_rate = 0.0
@@ -47,7 +47,7 @@ def get_admin_dashboard_stats(db: Session) -> dict:
         totals = (
             db.query(
                 func.count(Attendance.id).label("total"),
-                func.sum(func.case((Attendance.status == "present", 1), else_=0)).label("present"),
+                func.sum(case((Attendance.status == "present", 1), else_=0)).label("present"),
             )
             .filter(Attendance.date == day)
             .one()

@@ -1,6 +1,6 @@
 from datetime import date as date_type
 
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import Session
 
 from app.db.models import Attendance, Student
@@ -82,7 +82,7 @@ def get_attendance_report(db: Session) -> list[dict]:
             Student.id.label("student_id"),
             Student.roll_number,
             func.count(Attendance.id).label("total"),
-            func.sum(func.case((Attendance.status == "present", 1), else_=0)).label(
+            func.sum(case((Attendance.status == "present", 1), else_=0)).label(
                 "present"
             ),
         )

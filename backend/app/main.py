@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.db.base import Base
 from app.db.session import engine, get_db, SessionLocal
 from app.db.init_db import seed_database
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Request
 from fastapi import Form
@@ -73,6 +73,23 @@ app.add_middleware(
 @app.get("/health", tags=["health"])
 def health_check() -> dict:
     return {"status": "ok"}
+
+
+@app.exception_handler(HTTPException)
+async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    # Check if request is expecting HTML (browser request)
+    accept_header = request.headers.get("accept", "")
+    if "text/html" in accept_header or "text/*" in accept_header:
+        return templates.TemplateResponse(
+            request,
+            "error.html",
+            {"request": request, "status_code": exc.status_code, "message": exc.detail},
+            status_code=exc.status_code
+        )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+    )
 
 
 api_prefix = "/api/v1"
@@ -200,6 +217,7 @@ async def attendance_page(
         report = attendance_crud.get_attendance_report(db)
 
     return templates.TemplateResponse(
+        request,
         "attendance.html",
         {
             "request": request,
@@ -243,6 +261,7 @@ async def attendance_report(
 ):
     report = attendance_crud.get_attendance_report(db)
     return templates.TemplateResponse(
+        request,
         "attendance.html",
         {
             "request": request,
@@ -255,7 +274,7 @@ async def attendance_report(
 
 @app.get("/faculty-module", response_class=HTMLResponse)
 async def faculty_page(request: Request):
-    return templates.TemplateResponse("faculty.html", {"request": request})
+    return templates.TemplateResponse(request, "faculty.html", {"request": request})
 
 
 @app.get("/assignments", response_class=HTMLResponse)
