@@ -84,4 +84,5 @@ The frontend will be available at `http://localhost:3000` (or the port configure
 - Flesh out database models for students, faculty, admins, attendance, assignments, results, notices, and timetables.
 - Build dashboards and pages in Reflex consuming the FastAPI backend.
 - Add tests, CI/CD, and production-ready configuration.
+- Secure login
 
