@@ -1,8 +1,7 @@
 import reflex as rx
 
-# Reflex expects app_name to match the directory structure
 config = rx.Config(
-    app_name="frontend",
+    app_name="app",
     api_url="http://localhost:8000"
 )
 
