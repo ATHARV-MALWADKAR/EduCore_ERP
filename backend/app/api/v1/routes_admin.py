@@ -103,7 +103,7 @@ def delete_user(
     user_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(RequireAdmin)
-) -> Any:
+) -> None:
     """Delete user (Admin only)."""
     if user_id == current_user.id:
         raise HTTPException(status_code=400, detail="Cannot delete your own account")
@@ -111,4 +111,3 @@ def delete_user(
     success = crud.delete_user(db, user_id)
     if not success:
         raise HTTPException(status_code=404, detail="User not found")
-    return None
