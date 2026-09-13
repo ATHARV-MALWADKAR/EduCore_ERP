@@ -6,7 +6,7 @@ from sqlalchemy import or_, and_, func
 
 from app.db.models import (
     Role, User, Department, Course, Subject, Student, Faculty,
-    Enrollment, Attendance, Assignment, Submission, Result, Notice, TimetableEntry
+    Enrollment, Attendance, Assignment, Submission, Result, Notice, TimetableEntry, UserRefreshToken
 )
 
 
@@ -112,6 +112,49 @@ def delete_user(db: Session, user_id: int) -> bool:
     db.delete(user)
     db.commit()
     return True
+
+
+# ============ Refresh Token CRUD ============
+def create_refresh_token(db: Session, user_id: int, token_hash: str, expires_at: datetime) -> UserRefreshToken:
+    refresh_token = UserRefreshToken(
+        user_id=user_id,
+        token_hash=token_hash,
+        expires_at=expires_at
+    )
+    db.add(refresh_token)
+    db.commit()
+    db.refresh(refresh_token)
+    return refresh_token
+
+
+def get_refresh_token(db: Session, token_hash: str) -> Optional[UserRefreshToken]:
+    return db.query(UserRefreshToken).filter(UserRefreshToken.token_hash == token_hash).first()
+
+
+def revoke_refresh_token(db: Session, token_hash: str) -> bool:
+    refresh_token = get_refresh_token(db, token_hash)
+    if not refresh_token:
+        return False
+    refresh_token.revoke()
+    db.commit()
+    return True
+
+
+def revoke_all_user_tokens(db: Session, user_id: int) -> int:
+    count = db.query(UserRefreshToken).filter(
+        UserRefreshToken.user_id == user_id,
+        UserRefreshToken.revoked_at.is_(None)
+    ).update({UserRefreshToken.revoked_at: datetime.now(timezone.utc)})
+    db.commit()
+    return count
+
+
+def clean_expired_tokens(db: Session) -> int:
+    count = db.query(UserRefreshToken).filter(
+        UserRefreshToken.expires_at < datetime.now(timezone.utc)
+    ).delete()
+    db.commit()
+    return count
 
 
 # ============ Department CRUD ============
@@ -514,3 +557,486 @@ def delete_notice(db: Session, notice_id: int) -> bool:
     db.delete(notice)
     db.commit()
     return True
+
+
+# ============ Timetable CRUD ============
+def list_timetable(db: Session, skip: int = 0, limit: int = 100, course_id: Optional[int] = None, faculty_id: Optional[int] = None, academic_year: Optional[str] = None) -> List[TimetableEntry]:
+    query = db.query(TimetableEntry).options(
+        joinedload(TimetableEntry.course),
+        joinedload(TimetableEntry.subject),
+        joinedload(TimetableEntry.faculty)
+    )
+    if course_id:
+        query = query.filter(TimetableEntry.course_id == course_id)
+    if faculty_id:
+        query = query.filter(TimetableEntry.faculty_id == faculty_id)
+    if academic_year:
+        query = query.filter(TimetableEntry.academic_year == academic_year)
+    return query.offset(skip).limit(limit).all()
+
+
+def count_timetable(db: Session, course_id: Optional[int] = None, faculty_id: Optional[int] = None, academic_year: Optional[str] = None) -> int:
+    query = db.query(TimetableEntry)
+    if course_id:
+        query = query.filter(TimetableEntry.course_id == course_id)
+    if faculty_id:
+        query = query.filter(TimetableEntry.faculty_id == faculty_id)
+    if academic_year:
+        query = query.filter(TimetableEntry.academic_year == academic_year)
+    return query.count()
+
+
+def get_timetable(db: Session, timetable_id: int) -> Optional[TimetableEntry]:
+    return db.query(TimetableEntry).options(
+        joinedload(TimetableEntry.course),
+        joinedload(TimetableEntry.subject),
+        joinedload(TimetableEntry.faculty)
+    ).filter(TimetableEntry.id == timetable_id).first()
+
+
+def create_timetable(db: Session, course_id: int, subject_id: int, faculty_id: int, day_of_week: int, start_time: time, end_time: time, room: Optional[str] = None, academic_year: str = "2025-2026") -> TimetableEntry:
+    timetable = TimetableEntry(
+        course_id=course_id,
+        subject_id=subject_id,
+        faculty_id=faculty_id,
+        day_of_week=day_of_week,
+        start_time=start_time,
+        end_time=end_time,
+        room=room,
+        academic_year=academic_year
+    )
+    db.add(timetable)
+    db.commit()
+    db.refresh(timetable)
+    return timetable
+
+
+def update_timetable(db: Session, timetable_id: int, course_id: Optional[int] = None, subject_id: Optional[int] = None, faculty_id: Optional[int] = None, day_of_week: Optional[int] = None, start_time: Optional[time] = None, end_time: Optional[time] = None, room: Optional[str] = None, academic_year: Optional[str] = None) -> Optional[TimetableEntry]:
+    timetable = get_timetable(db, timetable_id)
+    if not timetable:
+        return None
+    if course_id:
+        timetable.course_id = course_id
+    if subject_id:
+        timetable.subject_id = subject_id
+    if faculty_id:
+        timetable.faculty_id = faculty_id
+    if day_of_week is not None:
+        timetable.day_of_week = day_of_week
+    if start_time:
+        timetable.start_time = start_time
+    if end_time:
+        timetable.end_time = end_time
+    if room is not None:
+        timetable.room = room
+    if academic_year:
+        timetable.academic_year = academic_year
+    timetable.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(timetable)
+    return timetable
+
+
+def delete_timetable(db: Session, timetable_id: int) -> bool:
+    timetable = get_timetable(db, timetable_id)
+    if not timetable:
+        return False
+    db.delete(timetable)
+    db.commit()
+    return True
+
+
+# ============ Assignment CRUD ============
+def list_assignments(db: Session, skip: int = 0, limit: int = 100, subject_id: Optional[int] = None, status: Optional[str] = None) -> List[Assignment]:
+    query = db.query(Assignment).options(joinedload(Assignment.subject))
+    if subject_id:
+        query = query.filter(Assignment.subject_id == subject_id)
+    if status:
+        query = query.filter(Assignment.status == status)
+    return query.offset(skip).limit(limit).all()
+
+
+def count_assignments(db: Session, subject_id: Optional[int] = None, status: Optional[str] = None) -> int:
+    query = db.query(Assignment)
+    if subject_id:
+        query = query.filter(Assignment.subject_id == subject_id)
+    if status:
+        query = query.filter(Assignment.status == status)
+    return query.count()
+
+
+def get_assignment(db: Session, assignment_id: int) -> Optional[Assignment]:
+    return db.query(Assignment).options(joinedload(Assignment.subject)).filter(Assignment.id == assignment_id).first()
+
+
+def create_assignment(db: Session, subject_id: int, created_by_id: int, title: str, description: Optional[str] = None, due_at: datetime = None, status: str = "draft") -> Assignment:
+    assignment = Assignment(
+        subject_id=subject_id,
+        created_by_id=created_by_id,
+        title=title,
+        description=description,
+        due_at=due_at,
+        status=status
+    )
+    db.add(assignment)
+    db.commit()
+    db.refresh(assignment)
+    return assignment
+
+
+def update_assignment(db: Session, assignment_id: int, subject_id: Optional[int] = None, title: Optional[str] = None, description: Optional[str] = None, due_at: Optional[datetime] = None, status: Optional[str] = None) -> Optional[Assignment]:
+    assignment = get_assignment(db, assignment_id)
+    if not assignment:
+        return None
+    if subject_id:
+        assignment.subject_id = subject_id
+    if title:
+        assignment.title = title
+    if description is not None:
+        assignment.description = description
+    if due_at:
+        assignment.due_at = due_at
+    if status:
+        assignment.status = status
+    assignment.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(assignment)
+    return assignment
+
+
+def delete_assignment(db: Session, assignment_id: int) -> bool:
+    assignment = get_assignment(db, assignment_id)
+    if not assignment:
+        return False
+    db.delete(assignment)
+    db.commit()
+    return True
+
+
+# ============ Submission CRUD ============
+def list_submissions(db: Session, skip: int = 0, limit: int = 100, assignment_id: Optional[int] = None, student_id: Optional[int] = None) -> List[Submission]:
+    query = db.query(Submission).options(
+        joinedload(Submission.assignment),
+        joinedload(Submission.student)
+    )
+    if assignment_id:
+        query = query.filter(Submission.assignment_id == assignment_id)
+    if student_id:
+        query = query.filter(Submission.student_id == student_id)
+    return query.offset(skip).limit(limit).all()
+
+
+def count_submissions(db: Session, assignment_id: Optional[int] = None, student_id: Optional[int] = None) -> int:
+    query = db.query(Submission)
+    if assignment_id:
+        query = query.filter(Submission.assignment_id == assignment_id)
+    if student_id:
+        query = query.filter(Submission.student_id == student_id)
+    return query.count()
+
+
+def get_submission(db: Session, submission_id: int) -> Optional[Submission]:
+    return db.query(Submission).options(
+        joinedload(Submission.assignment),
+        joinedload(Submission.student)
+    ).filter(Submission.id == submission_id).first()
+
+
+def create_submission(db: Session, assignment_id: int, student_id: int, content: Optional[str] = None, file_path: Optional[str] = None) -> Submission:
+    submission = Submission(
+        assignment_id=assignment_id,
+        student_id=student_id,
+        content=content,
+        file_path=file_path
+    )
+    db.add(submission)
+    db.commit()
+    db.refresh(submission)
+    return submission
+
+
+def update_submission(db: Session, submission_id: int, content: Optional[str] = None, file_path: Optional[str] = None) -> Optional[Submission]:
+    submission = get_submission(db, submission_id)
+    if not submission:
+        return None
+    if content is not None:
+        submission.content = content
+    if file_path is not None:
+        submission.file_path = file_path
+    submission.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(submission)
+    return submission
+
+
+def grade_submission(db: Session, submission_id: int, marks_given: Optional[float] = None, feedback: Optional[str] = None) -> Optional[Submission]:
+    submission = get_submission(db, submission_id)
+    if not submission:
+        return None
+    if marks_given is not None:
+        submission.marks_given = marks_given
+    if feedback is not None:
+        submission.feedback = feedback
+    submission.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(submission)
+    return submission
+
+
+def delete_submission(db: Session, submission_id: int) -> bool:
+    submission = get_submission(db, submission_id)
+    if not submission:
+        return False
+    db.delete(submission)
+    db.commit()
+    return True
+
+
+# ============ Result CRUD ============
+def list_results(db: Session, skip: int = 0, limit: int = 100, student_id: Optional[int] = None, subject_id: Optional[int] = None, exam_type: Optional[str] = None, academic_year: Optional[str] = None) -> List[Result]:
+    query = db.query(Result).options(
+        joinedload(Result.student),
+        joinedload(Result.subject)
+    )
+    if student_id:
+        query = query.filter(Result.student_id == student_id)
+    if subject_id:
+        query = query.filter(Result.subject_id == subject_id)
+    if exam_type:
+        query = query.filter(Result.exam_type == exam_type)
+    if academic_year:
+        query = query.filter(Result.academic_year == academic_year)
+    return query.offset(skip).limit(limit).all()
+
+
+def count_results(db: Session, student_id: Optional[int] = None, subject_id: Optional[int] = None, exam_type: Optional[str] = None, academic_year: Optional[str] = None) -> int:
+    query = db.query(Result)
+    if student_id:
+        query = query.filter(Result.student_id == student_id)
+    if subject_id:
+        query = query.filter(Result.subject_id == subject_id)
+    if exam_type:
+        query = query.filter(Result.exam_type == exam_type)
+    if academic_year:
+        query = query.filter(Result.academic_year == academic_year)
+    return query.count()
+
+
+def get_result(db: Session, result_id: int) -> Optional[Result]:
+    return db.query(Result).options(
+        joinedload(Result.student),
+        joinedload(Result.subject)
+    ).filter(Result.id == result_id).first()
+
+
+def create_result(db: Session, student_id: int, subject_id: int, exam_type: str, academic_year: str, marks_obtained: float, max_marks: float, grade: Optional[str] = None) -> Result:
+    result = Result(
+        student_id=student_id,
+        subject_id=subject_id,
+        exam_type=exam_type,
+        academic_year=academic_year,
+        marks_obtained=marks_obtained,
+        max_marks=max_marks,
+        grade=grade
+    )
+    db.add(result)
+    db.commit()
+    db.refresh(result)
+    return result
+
+
+def update_result(db: Session, result_id: int, marks_obtained: Optional[float] = None, max_marks: Optional[float] = None, grade: Optional[str] = None) -> Optional[Result]:
+    result = get_result(db, result_id)
+    if not result:
+        return None
+    if marks_obtained is not None:
+        result.marks_obtained = marks_obtained
+    if max_marks is not None:
+        result.max_marks = max_marks
+    if grade is not None:
+        result.grade = grade
+    result.updated_at = datetime.now(timezone.utc)
+    db.commit()
+    db.refresh(result)
+    return result
+
+
+def delete_result(db: Session, result_id: int) -> bool:
+    result = get_result(db, result_id)
+    if not result:
+        return False
+    db.delete(result)
+    db.commit()
+    return True
+
+
+# ============ Attendance CRUD ============
+def list_attendance(db: Session, skip: int = 0, limit: int = 100, student_id: Optional[int] = None, subject_id: Optional[int] = None, date_from: Optional[date] = None, date_to: Optional[date] = None) -> List[Attendance]:
+    query = db.query(Attendance).options(
+        joinedload(Attendance.student),
+        joinedload(Attendance.subject)
+    )
+    if student_id:
+        query = query.filter(Attendance.student_id == student_id)
+    if subject_id:
+        query = query.filter(Attendance.subject_id == subject_id)
+    if date_from:
+        query = query.filter(Attendance.date >= date_from)
+    if date_to:
+        query = query.filter(Attendance.date <= date_to)
+    return query.offset(skip).limit(limit).all()
+
+
+def count_attendance(db: Session, student_id: Optional[int] = None, subject_id: Optional[int] = None, date_from: Optional[date] = None, date_to: Optional[date] = None) -> int:
+    query = db.query(Attendance)
+    if student_id:
+        query = query.filter(Attendance.student_id == student_id)
+    if subject_id:
+        query = query.filter(Attendance.subject_id == subject_id)
+    if date_from:
+        query = query.filter(Attendance.date >= date_from)
+    if date_to:
+        query = query.filter(Attendance.date <= date_to)
+    return query.count()
+
+
+def get_attendance(db: Session, attendance_id: int) -> Optional[Attendance]:
+    return db.query(Attendance).options(
+        joinedload(Attendance.student),
+        joinedload(Attendance.subject)
+    ).filter(Attendance.id == attendance_id).first()
+
+
+def create_attendance(db: Session, student_id: int, subject_id: int, date: date, status: str, remarks: Optional[str] = None) -> Attendance:
+    attendance = Attendance(
+        student_id=student_id,
+        subject_id=subject_id,
+        date=date,
+        status=status,
+        remarks=remarks
+    )
+    db.add(attendance)
+    db.commit()
+    db.refresh(attendance)
+    return attendance
+
+
+def mark_attendance(db: Session, student_id: int, subject_id: int, date: date, status: str, remarks: Optional[str] = None) -> Attendance:
+    # First check if attendance already exists for this student/subject/date
+    existing = db.query(Attendance).filter(
+        Attendance.student_id == student_id,
+        Attendance.subject_id == subject_id,
+        Attendance.date == date
+    ).first()
+
+    if existing:
+        existing.status = status
+        existing.remarks = remarks
+        existing.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(existing)
+        return existing
+    else:
+        attendance = Attendance(
+            student_id=student_id,
+            subject_id=subject_id,
+            date=date,
+            status=status,
+            remarks=remarks
+        )
+        db.add(attendance)
+        db.commit()
+        db.refresh(attendance)
+        return attendance
+
+
+def get_student_attendance_summary(db: Session, student_id: int) -> Dict[str, Any]:
+    """Get attendance summary for a student."""
+    total_classes = db.query(func.count(Attendance.id)).filter(Attendance.student_id == student_id).scalar()
+    present_classes = db.query(func.count(Attendance.id)).filter(
+        Attendance.student_id == student_id,
+        Attendance.status == "present"
+    ).scalar()
+    absent_classes = db.query(func.count(Attendance.id)).filter(
+        Attendance.student_id == student_id,
+        Attendance.status == "absent"
+    ).scalar()
+    late_classes = db.query(func.count(Attendance.id)).filter(
+        Attendance.student_id == student_id,
+        Attendance.status == "late"
+    ).scalar()
+
+    attendance_percentage = (present_classes / total_classes * 100) if total_classes > 0 else 0
+
+    return {
+        "total_classes": total_classes or 0,
+        "present_classes": present_classes or 0,
+        "absent_classes": absent_classes or 0,
+        "late_classes": late_classes or 0,
+        "attendance_percentage": round(attendance_percentage, 2)
+    }
+
+
+def get_attendance_report(db: Session) -> Dict[str, Any]:
+    """Get overall attendance report."""
+    # Overall stats
+    total_records = db.query(func.count(Attendance.id)).scalar()
+    present_count = db.query(func.count(Attendance.id)).filter(Attendance.status == "present").scalar()
+    absent_count = db.query(func.count(Attendance.id)).filter(Attendance.status == "absent").scalar()
+    late_count = db.query(func.count(Attendance.id)).filter(Attendance.status == "late").scalar()
+
+    # Per subject stats
+    subject_stats = db.query(
+        Subject.name,
+        Subject.code,
+        func.count(Attendance.id).label('total'),
+        func.sum(func.case([(Attendance.status == 'present', 1)], else_=0)).label('present'),
+        func.sum(func.case([(Attendance.status == 'absent', 1)], else_=0)).label('absent')
+    ).join(Attendance, Attendance.subject_id == Subject.id)\
+     .group_by(Subject.id, Subject.name, Subject.code)\
+     .all()
+
+    # Per student stats (top 10 lowest attendance)
+    student_low_attendance = db.query(
+        User.full_name,
+        Student.roll_number,
+        func.count(Attendance.id).label('total_classes'),
+        func.sum(func.case([(Attendance.status == 'present', 1)], else_=0)).label('present_count')
+    ).join(Student, Student.user_id == User.id)\
+     .join(Attendance, Attendance.student_id == Student.id)\
+     .group_by(User.id, User.full_name, Student.roll_number)\
+     .having(func.count(Attendance.id) > 0)\
+     .order_by((func.sum(func.case([(Attendance.status == 'present', 1)], else_=0)) * 100.0 / func.count(Attendance.id)).asc())\
+     .limit(10)\
+     .all()
+
+    attendance_percentage = (present_count / total_records * 100) if total_records > 0 else 0
+
+    return {
+        "total_records": total_records or 0,
+        "present_count": present_count or 0,
+        "absent_count": absent_count or 0,
+        "late_count": late_count or 0,
+        "attendance_percentage": round(attendance_percentage, 2),
+        "subject_breakdown": [
+            {
+                "subject_name": stat.name,
+                "subject_code": stat.code,
+                "total_classes": stat.total or 0,
+                "present_count": stat.present or 0,
+                "absent_count": stat.absent or 0,
+                "percentage": round((stat.present or 0) / (stat.total or 1) * 100, 2)
+            }
+            for stat in subject_stats
+        ],
+        "low_attendance_students": [
+            {
+                "name": student.full_name,
+                "roll_number": student.roll_number,
+                "total_classes": student.total_classes or 0,
+                "present_count": student.present_count or 0,
+                "percentage": round((student.present_count or 0) / (student.total_classes or 1) * 100, 2)
+            }
+            for student in student_low_attendance
+        ]
+    }
