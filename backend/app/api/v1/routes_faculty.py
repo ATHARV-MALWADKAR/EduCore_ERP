@@ -90,9 +90,8 @@ def delete_faculty(
     faculty_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(RequireAdmin)
-) -> Any:
+) -> None:
     """Delete faculty member (Admin only)."""
     success = crud.delete_faculty(db, faculty_id)
     if not success:
         raise HTTPException(status_code=404, detail="Faculty not found")
-    return None
