@@ -106,8 +106,11 @@ def delete_student(
     student_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(RequireAdmin)
-) -> Any:
+) -> None:
     """Delete a student (Admin only)."""
+    deleted = crud.delete_student(db, student_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Student not found")
     success = crud.delete_student(db, student_id)
     if not success:
         raise HTTPException(status_code=404, detail="Student not found")

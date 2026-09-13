@@ -1,11 +1,7 @@
 import reflex as rx
 
-
-class CollegeErpConfig(rx.Config):
-    app_name: str = "college_erp"
-    db_url: str | None = None
-    api_url: str = "http://localhost:8000"
-
-
-config = CollegeErpConfig()
+config = rx.Config(
+    app_name="college_erp",
+    api_url="http://localhost:8000"
+)
 
