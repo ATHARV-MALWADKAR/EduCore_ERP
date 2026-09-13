@@ -13,6 +13,7 @@ from app.db.models.submission import Submission
 from app.db.models.result import Result
 from app.db.models.notice import Notice
 from app.db.models.timetable import TimetableEntry
+from app.db.models.refresh_token import UserRefreshToken
 
 __all__ = [
     "Base",
@@ -30,4 +31,5 @@ __all__ = [
     "Result",
     "Notice",
     "TimetableEntry",
+    "UserRefreshToken",
 ]

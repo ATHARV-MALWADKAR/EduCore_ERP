@@ -22,3 +22,4 @@ class User(Base):
     student_profile = relationship("Student", back_populates="user", uselist=False)
     faculty_profile = relationship("Faculty", back_populates="user", uselist=False)
     notices_created = relationship("Notice", back_populates="created_by")
+    refresh_tokens = relationship("UserRefreshToken", back_populates="user", cascade="all, delete-orphan")
