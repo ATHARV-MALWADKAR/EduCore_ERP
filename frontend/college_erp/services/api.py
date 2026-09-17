@@ -75,12 +75,18 @@ class APIClient:
     async def get_student_profile(self, student_id: int) -> Dict[str, Any]:
         return await self._request("GET", f"/students/{student_id}")
 
+    async def get_faculty_profile(self, faculty_id: int) -> Dict[str, Any]:
+        return await self._request("GET", f"/faculty/{faculty_id}")
+
     # --- Faculty / Attendance ---
     async def get_attendance_report(self) -> Dict[str, Any]:
         return await self._request("GET", "/attendance/report/overall")
 
     async def get_student_attendance(self, student_id: int) -> Dict[str, Any]:
         return await self._request("GET", f"/attendance/summary/student/{student_id}")
+
+    async def get_assignments_by_faculty(self, faculty_id: int) -> List[Dict[str, Any]]:
+        return await self._request("GET", f"/faculty/{faculty_id}/assignments")
 
     async def get_attendance_list(
         self, skip: int = 0, limit: int = 100, student_id: int = None, subject_id: int = None
