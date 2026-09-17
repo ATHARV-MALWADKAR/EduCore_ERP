@@ -1,52 +1,61 @@
 import reflex as rx
+from college_erp.state.auth_state import AuthState
+from college_erp.state.student_dashboard_state import StudentDashboardState
+from college_erp.components.student_dashboard import (
+    attendance_overview,
+    assignments_overview,
+    results_overview,
+    notices_overview
+)
 
-from college_erp.components.layouts import dashboard_layout
 
-
-@rx.page(route="/student/dashboard", title="Student Dashboard")
+@rx.page(route="/student/dashboard", title="Student Dashboard - College ERP")
 def student_dashboard() -> rx.Component:
-    return dashboard_layout(
-        rx.vstack(
-            rx.heading("Student Dashboard", size="lg"),
-            rx.text("Overview of attendance, assignments, results, and notices."),
-            rx.grid(
-                rx.box(
-                    rx.heading("Attendance", size="md"),
-                    rx.text("Attendance summary will appear here."),
-                    padding="1rem",
-                    border_radius="md",
-                    background_color="white",
-                    box_shadow="sm",
+    return rx.box(
+        rx.cond(
+            AuthState.is_authenticated,
+            rx.vstack(
+                rx.hstack(
+                    rx.heading("Student Dashboard", size="lg"),
+                    rx.spacer(),
+                    rx.badge(
+                        f"Welcome, {AuthState.full_name}",
+                        color_scheme="purple",
+                        variant="soft",
+                    ),
+                    width="100%",
+                    align_items="center",
                 ),
-                rx.box(
-                    rx.heading("Assignments", size="md"),
-                    rx.text("Upcoming and pending assignments will appear here."),
-                    padding="1rem",
-                    border_radius="md",
-                    background_color="white",
-                    box_shadow="sm",
+                rx.grid(
+                    attendance_overview(),
+                    assignments_overview(),
+                    results_overview(),
+                    notices_overview(),
+                    template_columns="repeat(2, minmax(0, 1fr))",
+                    gap="1.5rem",
+                    width="100%",
                 ),
-                rx.box(
-                    rx.heading("Results", size="md"),
-                    rx.text("Recent exam results will appear here."),
-                    padding="1rem",
-                    border_radius="md",
-                    background_color="white",
-                    box_shadow="sm",
-                ),
-                rx.box(
-                    rx.heading("Notices", size="md"),
-                    rx.text("Important college notices will appear here."),
-                    padding="1rem",
-                    border_radius="md",
-                    background_color="white",
-                    box_shadow="sm",
-                ),
-                template_columns="repeat(2, minmax(0, 1fr))",
-                gap="1.5rem",
+                spacing="1.5rem",
+                align_items="stretch",
+                width="100%",
+                max_width="1200px",
+                margin_x="auto",
+                padding="1.5rem",
             ),
-            spacing="1.5rem",
-            align_items="stretch",
-        )
+            rx.center(
+                rx.vstack(
+                    rx.text("Please login to access dashboard", color="gray.600"),
+                    rx.button(
+                        "Login",
+                        on_click=rx.redirect("/"),
+                        background_color="#2563eb",
+                        color="white",
+                    ),
+                    spacing="3",
+                ),
+                height="80vh",
+            ),
+        ),
+        background_color="#f7fafc",
+        min_height="100vh",
     )
-
