@@ -30,11 +30,11 @@ class AuthState(rx.State):
 
             # Redirect to the correct dashboard based on role
             if self.role == "admin":
-                return rx.redirect("/admin/dashboard")
+                yield rx.redirect("/admin/dashboard")
             elif self.role == "faculty":
-                return rx.redirect("/faculty/dashboard")
+                yield rx.redirect("/faculty/dashboard")
             elif self.role == "student":
-                return rx.redirect("/student/dashboard")
+                yield rx.redirect("/student/dashboard")
 
         except Exception as e:
             self.error_message = str(e)
