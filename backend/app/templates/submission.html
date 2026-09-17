@@ -6,12 +6,122 @@
 
 {% block content %}
 <div class="space-y-6">
+  <!-- Submission Details Card -->
   <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
-    <div class="text-sm font-semibold">Submission Details</div>
-    <div class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-      Submission ID: {{ submission_id }}
+    <div class="text-sm font-semibold mb-2">Submission Information</div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <div class="text-xs font-medium text-slate-500">Student</div>
+          <div class="text-lg font-semibold">{{ submission.student_name }}</div>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-slate-500">Roll Number</div>
+          <div class="text-lg font-semibold">{{ submission.roll_number }}</div>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-slate-500">Assignment</div>
+          <div class="text-lg font-semibold">{{ submission.assignment_title }}</div>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-slate-500">Submitted At</div>
+          <div class="text-lg font-semibold">{{ submission.submitted_at_formatted }}</div>
+        </div>
+      </div>
+
+      {% if submission.updated_at and submission.updated_at != submission.submitted_at %}
+        <div class="border-t pt-4">
+          <div class="text-xs font-medium text-slate-500">Last Updated</div>
+          <div class="text-lg font-semibold">{{ submission.updated_at_formatted }}</div>
+        </div>
+      {% endif %}
+
+      {% if submission.content %}
+        <div class="border-t pt-4">
+          <div class="text-xs font-medium text-slate-500">Submission Content</div>
+          <div class="bg-slate-50 p-4 rounded-lg dark:bg-slate-800/50 whitespace-pre-line">{{ submission.content }}</div>
+        </div>
+      {% endif %}
+
+      {% if submission.file_path %}
+        <div class="border-t pt-4">
+          <div class="text-xs font-medium text-slate-500">Attached File</div>
+          <a href="/static/{{ submission.file_path }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+            {{ submission.file_path.split('/')[-1] }}
+            <svg class="inline h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+            </svg>
+          </a>
+        </div>
+      {% endif %}
+
+      <!-- Grading Section (Faculty only) -->
+      {% if current_user.role.name == 'faculty' %}
+        {% if submission.marks_given is not none %}
+          <div class="border-t pt-4">
+            <div class="text-xs font-medium text-slate-500">Grade</div>
+            <div class="text-2xl font-bold {% if submission.marks_given >= submission.marks_obtainable * 0.9 %}text-green-600{% elif submission.marks_given >= submission.marks_obtainable * 0.7 %}text-yellow-600{% else %}text-red-600{% endif %}">
+              {{ submission.marks_given }}/{{ submission.marks_obtainable }}
+            </div>
+            {% if submission.feedback %}
+              <div class="mt-2 text-slate-600"><strong>Feedback:</strong> {{ submission.feedback }}</div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="border-t pt-4">
+            <div class="text-sm font-semibold mb-2">Grade Submission</div>
+            <form action="" method="post" id="gradingForm" class="space-y-3">
+              <div>
+                <label for="marks_given" class="block text-sm font-medium mb-2">Marks Obtained</label>
+                <input type="number" id="marks_given" name="marks_given" min="0" step="0.01" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" value="{{ submission.marks_given or '' }}">
+              </div>
+
+              <div>
+                <label for="feedback" class="block text-sm font-medium mb-2">Feedback (Optional)</label>
+                <textarea id="feedback" name="feedback" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="Provide feedback for the student...">{{ submission.feedback or '' }}</textarea>
+              </div>
+
+              <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors dark:bg-indigo-500 dark:hover:bg-indigo-600">
+                Submit Grade
+              </button>
+            </form>
+          </div>
+        {% endif %}
+      {% endif %}
     </div>
-    <!-- TODO: Add submission details, grading form -->
   </div>
 </div>
+
+{% block extra_scripts %}
+<script>
+  // Handle grading form submission via AJAX
+  document.getElementById('gradingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const submissionId = {{ submission.id }}; // This should be available from context
+
+    fetch('/submissions/' + submissionId + '/grade', {
+      method: 'POST',
+      body: new URLSearchParams(formData),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        // Reload the page to show updated grade
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.detail || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      alert('Error: ' + error.message);
+    });
+  });
+</script>
+{% endblock %}
 {% endblock %}

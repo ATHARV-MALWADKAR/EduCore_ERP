@@ -6,12 +6,272 @@
 
 {% block content %}
 <div class="space-y-6">
+  <!-- Assignment Details Card -->
   <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
-    <div class="text-sm font-semibold">Assignment Details</div>
-    <div class="mt-2 text-sm text-slate-600 dark:text-slate-300">
-      Assignment ID: {{ assignment_id }}
+    <div class="text-sm font-semibold mb-2">Assignment Information</div>
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div>
+          <div class="text-xs font-medium text-slate-500">Title</div>
+          <div class="text-lg font-semibold">{{ assignment.title }}</div>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-slate-500">Subject</div>
+          <div class="text-lg font-semibold">{{ assignment.subject_name }}</div>
+        </div>
+        <div>
+          <div class="text-xs font-medium text-slate-500">Due Date</div>
+          <div class="text-lg font-semibold {% if assignment.is_overdue %}text-red-600{% elif assignment.days_left <= 2 %}text-orange-600{% else %}text-green-600{% endif %}">
+            {{ assignment.due_at_formatted }}
+          </div>
+          {% if assignment.is_overdue %}
+            <div class="text-xs text-red-500 mt-1">Overdue by {{ assignment.days_overdue }} days</div>
+          {% elif assignment.days_left <= 2 %}
+            <div class="text-xs text-orange-500 mt-1">Due in {{ assignment.days_left }} days</div>
+          {% endif %}
+        </div>
+        <div>
+          <div class="text-xs font-medium text-slate-500">Status</div>
+          <div class="text-lg font-semibold">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium
+              {% if assignment.status == 'published' %}bg-green-100 text-green-800{% elif assignment.status == 'draft' %}bg-orange-100 text-orange-800{% else %}bg-red-100 text-red-800{% endif %}">
+              {{ assignment.status|title }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {% if assignment.description %}
+        <div class="border-t pt-4">
+          <div class="text-xs font-medium text-slate-500 mb-2">Description</div>
+          <div class="text-slate-600 whitespace-pre-line">{{ assignment.description }}</div>
+        </div>
+      {% endif %}
     </div>
-    <!-- TODO: Add assignment details, submission form for students, submissions list for faculty -->
+  </div>
+
+  <!-- Submission Section -->
+  {% if current_user.role.name == 'student' %}
+    {% if not submission.submitted %}
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <div class="mb-4">
+          <div class="text-sm font-semibold">Your Submission</div>
+          <div class="text-sm text-slate-600">Submit your work for this assignment</div>
+        </div>
+        <form action="/assignments/{{ assignment.id }}/submit" method="post" enctype="multipart/form-data" class="space-y-4">
+          <div>
+            <label for="content" class="block text-sm font-medium mb-2">Content (Optional)</label>
+            <textarea id="content" name="content" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="Enter your submission content here..."></textarea>
+          </div>
+
+          <div>
+            <label for="file" class="block text-sm font-medium mb-2">Attach File (Optional)</label>
+            <input type="file" id="file" name="file" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
+            <p class="mt-1 text-xs text-slate-500">Allowed formats: PDF, DOC, DOCX, TXT, ZIP (Max 10MB)</p>
+          </div>
+
+          <button type="submit" class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 transition-colors dark:bg-indigo-500 dark:hover:bg-indigo-600">
+            Submit Assignment
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <div class="mb-4">
+          <div class="text-sm font-semibold">Your Submission</div>
+          <div class="text-sm text-slate-600">View your submitted work</div>
+        </div>
+
+        <div class="space-y-4">
+          <div class="border-t pt-4">
+            <div class="text-xs font-medium text-slate-500">Submitted At</div>
+            <div class="text-lg font-semibold">{{ submission.submitted_at_formatted }}</div>
+          </div>
+
+          {% if submission.content %}
+            <div class="border-t pt-4">
+              <div class="text-xs font-medium text-slate-500">Submission Content</div>
+              <div class="bg-slate-50 p-4 rounded-lg dark:bg-slate-800/50 whitespace-pre-line">{{ submission.content }}</div>
+            </div>
+          {% endif %}
+
+          {% if submission.file_path %}
+            <div class="border-t pt-4">
+              <div class="text-xs font-medium text-slate-500">Attached File</div>
+              <a href="/static/{{ submission.file_path }}" class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300">
+                {{ submission.file_path.split('/')[-1] }}
+                <svg class="inline h-4 w-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </a>
+            </div>
+          {% endif %}
+
+          {% if submission.marks_given is not none %}
+            <div class="border-t pt-4">
+              <div class="text-xs font-medium text-slate-500">Grade</div>
+              <div class="text-2xl font-bold {% if submission.marks_given >= submission.marks_obtainable * 0.9 %}text-green-600{% elif submission.marks_given >= submission.marks_obtainable * 0.7 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                {{ submission.marks_given }}/{{ submission.marks_obtainable }}
+              </div>
+              {% if submission.feedback %}
+                <div class="mt-2 text-slate-600">{{ submission.feedback }}</div>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endif %}
+  {% else %}
+    <!-- Faculty View: Show submissions list -->
+    {% if submissions|length > 0 %}
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950">
+        <div class="mb-4">
+          <div class="text-sm font-semibold">Student Submissions ({{ submissions|length }})</div>
+          <div class="text-sm text-slate-600">View and grade student submissions</div>
+        </div>
+
+        <div class="space-y-4">
+          {% for submission in submissions %}
+            <div class="border rounded-lg p-4 bg-slate-50 dark:bg-slate-800/50">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="font-medium">{{ submission.student_name }}</div>
+                  <div class="text-xs text-slate-500">Roll: {{ submission.roll_number }}</div>
+                </div>
+                <div class="text-right">
+                  {% if submission.marks_given is not none %}
+                    <div class="text-sm font-semibold {% if submission.marks_given >= submission.marks_obtainable * 0.9 %}text-green-600{% elif submission.marks_given >= submission.marks_obtainable * 0.7 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                      {{ submission.marks_given }}/{{ submission.marks_obtainable }}
+                    </div>
+                  {% else %}
+                    <button onclick="openGradingModal({{ submission.id }})" class="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600">
+                      Grade
+                    </button>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mt-2">
+                {% if submission.submitted_at %}
+                  <div class="text-xs text-slate-400">Submitted: {{ submission.submitted_at_formatted }}</div>
+                {% endif %}
+                {% if submission.updated_at and submission.updated_at != submission.submitted_at %}
+                  <div class="text-xs text-slate-400">Updated: {{ submission.updated_at_formatted }}</div>
+                {% endif %}
+              </div>
+
+              {% if submission.content %}
+                <div class="mt-3 bg-slate-200 p-3 rounded dark:bg-slate-700/50 max-h-48 overflow-y-auto">
+                  <div class="text-xs font-medium mb-1">Content:</div>
+                  <div class="text-slate-600 whitespace-pre-line">{{ submission.content|truncate(200) }}</div>
+                  {% if submission.content|length > 200 %}
+                    <div class="mt-1 text-xs text-indigo-600">[Showing truncated content]</div>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-soft dark:border-slate-800 dark:bg-slate-950 text-center py-12">
+        <div class="text-slate-400">No submissions yet</div>
+        <div class="mt-2 text-sm text-slate-500">Students will appear here once they submit their work</div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+<!-- Grading Modal (for faculty) -->
+{% if current_user.role.name == 'faculty' %}
+<div id="gradingModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/50">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md dark:bg-slate-950">
+    <div class="flex justify-between items-start mb-4">
+      <h3 class="text-lg font-semibold">Grade Submission</h3>
+      <button onclick="closeGradingModal()" class="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300">
+        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+
+    <form id="gradingForm" action="" method="post">
+      <input type="hidden" name="submission_id" id="gradingSubmissionId">
+
+      <div class="mb-4">
+        <label for="marks" class="block text-sm font-medium mb-2">Marks Obtained</label>
+        <input type="number" id="marks" name="marks_given" min="0" step="0.01" required class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100">
+      </div>
+
+      <div class="mb-4">
+        <label for="feedback" class="block text-sm font-medium mb-2">Feedback (Optional)</label>
+        <textarea id="feedback" name="feedback" rows="4" class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100" placeholder="Provide feedback for the student..."></textarea>
+      </div>
+
+      <div class="flex justify-end space-x-3">
+        <button type="button" onclick="closeGradingModal()" class="px-4 py-2 bg-slate-200 text-slate-800 rounded hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+          Cancel
+        </button>
+        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600">
+          Submit Grade
+        </button>
+      </div>
+    </form>
   </div>
 </div>
+{% endif %}
+
+{% block extra_scripts %}
+<script>
+  // Grading modal functionality
+  function openGradingModal(submissionId) {
+    document.getElementById('gradingModal').classList.remove('hidden');
+    document.getElementById('gradingSubmissionId').value = submissionId;
+    document.getElementById('gradingForm').action = '/submissions/' + submissionId + '/grade';
+  }
+
+  function closeGradingModal() {
+    document.getElementById('gradingModal').classList.add('hidden');
+    document.getElementById('gradingForm').reset();
+  }
+
+  // Close modal when clicking outside
+  window.onclick = function(event) {
+    const modal = document.getElementById('gradingModal');
+    if (event.target === modal) {
+      closeGradingModal();
+    }
+  }
+
+  // Handle form submission via AJAX for better UX
+  document.getElementById('gradingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const submissionId = document.getElementById('gradingSubmissionId').value;
+
+    fetch('/submissions/' + submissionId + '/grade', {
+      method: 'POST',
+      body: new URLSearchParams(formData),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        closeGradingModal();
+        // Reload the page to show updated grade
+        window.location.reload();
+      } else {
+        alert('Error: ' + (data.detail || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      alert('Error: ' + error.message);
+    });
+  });
+</script>
+{% endblock %}
 {% endblock %}
